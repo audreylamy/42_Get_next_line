@@ -6,82 +6,72 @@
 /*   By: alamy <alamy@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/13 11:51:13 by alamy             #+#    #+#             */
-/*   Updated: 2017/12/18 14:39:09 by alamy            ###   ########.fr       */
+/*   Updated: 2017/12/18 18:44:59 by alamy            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char *ft_start_from_n(char *str)
+static	char	*ft_start_to_n(char *str)
 {
-	int i;
-	char *tmp;
+	int	i;
 
 	i = 0;
-	tmp = str;
 	while (str[i] != '\n')
 		i++;
-	tmp = ft_strsub(str, 0, i);
-	return(tmp);
+	str = ft_strsub(str, 0, i);
+	return (str);
 }
 
-char *ft_n_from_end(char *str)
+static	char	*ft_n_to_end(char *str)
 {
-	int i;
-	int end;
-	char *tmp;
+	int		i;
+	int		end;
+	char	*tmp;
 
 	i = 0;
 	end = ft_strlen(str);
-	while((str[i] != '\0') && (str[i] != '\n'))
+	while (str[i] != '\0' && str[i] != '\n')
 		i++;
 	tmp = ft_strsub(str, i + 1, end);
 	free(str);
-	return(tmp);
+	return (tmp);
 }
 
-char *ft_join_free(char *str, char *buffer) 
+static	char	*ft_join_free(char *str, char *buffer, int nb)
 {
-	char *tmp;
+	char	*tmp;
 
+	buffer[nb] = '\0';
 	tmp = ft_strjoin(str, buffer);
 	free(str);
 	return (tmp);
 }
 
-int get_next_line(const int fd, char **line)
+int				get_next_line(const int fd, char **line)
 {
 	int				nb;
 	char			buffer[BUFF_SIZE + 1];
 	static	char	*str;
 
-	if (fd < 0 || !line)
-        return (-1);
+	if (fd < 0 || line == 0)
+		return (-1);
 	if (str == NULL)
-		str = ft_strnew(0);
-	while ((nb = read(fd, buffer, BUFF_SIZE)) > 0)
+		str = ft_strnew(BUFF_SIZE);
+	while ((!ft_strchr(str, '\n')) && (nb = read(fd, buffer, BUFF_SIZE)) > 0)
 	{
-		buffer[nb] = '\0';
-		str = ft_join_free(str, buffer);
-		if (strchr(str, '\n'))
-		{
-			*line = ft_start_from_n(str);
-			str = ft_n_from_end(str);
-			return(1);
-		}
+		str = ft_join_free(str, buffer, nb);
 	}
 	if (nb == -1)
-        return (-1);
-	if (!strchr(str, '\n'))
-    {
-        if (nb == 0 && str[0] == '\0')
-        {
-            *line = NULL;
-            return (0);
-        }
-        *line = str;
-        ft_strdel(&str);
-        return (1);
-    }
+		return (-1);
+	*line = ft_strchr(str, '\n') ? ft_start_to_n(str) : ft_strdup(str);
+	if (ft_strchr(str, '\n'))
+		str = ft_n_to_end(str);
+	else
+	{
+		if (nb == 0 && str[0] == '\0')
+			return (0);
+		ft_strdel(&str);
+	}
 	return (1);
 }
