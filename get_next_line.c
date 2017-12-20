@@ -6,18 +6,18 @@
 /*   By: alamy <alamy@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/13 11:51:13 by alamy             #+#    #+#             */
-/*   Updated: 2017/12/18 18:44:59 by alamy            ###   ########.fr       */
+/*   Updated: 2017/12/20 10:18:21 by alamy            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static	char	*ft_start_to_n(char *str)
+static	char	*ft_s_to_n(char *str)
 {
 	int	i;
 
 	i = 0;
-	while (str[i] != '\n')
+	while (str[i] != '\0' && str[i] != '\n')
 		i++;
 	str = ft_strsub(str, 0, i);
 	return (str);
@@ -52,26 +52,27 @@ int				get_next_line(const int fd, char **line)
 {
 	int				nb;
 	char			buffer[BUFF_SIZE + 1];
-	static	char	*str;
+	static	char	*str[OPEN_MAX];
 
-	if (fd < 0 || line == 0)
+	if (fd < 0 || line == 0 || fd > OPEN_MAX)
 		return (-1);
-	if (str == NULL)
-		str = ft_strnew(BUFF_SIZE);
-	while ((!ft_strchr(str, '\n')) && (nb = read(fd, buffer, BUFF_SIZE)) > 0)
+	if (str[fd] == NULL)
+		str[fd] = ft_strnew(BUFF_SIZE);
+	while ((!ft_strchr(str[fd], '\n'))
+			&& (nb = read(fd, buffer, BUFF_SIZE)) > 0)
 	{
-		str = ft_join_free(str, buffer, nb);
+		str[fd] = ft_join_free(str[fd], buffer, nb);
 	}
 	if (nb == -1)
 		return (-1);
-	*line = ft_strchr(str, '\n') ? ft_start_to_n(str) : ft_strdup(str);
-	if (ft_strchr(str, '\n'))
-		str = ft_n_to_end(str);
+	*line = ft_strchr(str[fd], '\n') ? ft_s_to_n(str[fd]) : ft_strdup(str[fd]);
+	if (ft_strchr(str[fd], '\n'))
+		str[fd] = ft_n_to_end(str[fd]);
 	else
 	{
-		if (nb == 0 && str[0] == '\0')
+		if (nb == 0 && *str[fd] == '\0')
 			return (0);
-		ft_strdel(&str);
+		ft_strdel(&str[fd]);
 	}
 	return (1);
 }
